@@ -6,6 +6,17 @@ const prisma = new PrismaClient();
 async function main() {
   const passwordHash = await bcrypt.hash('Admin@123', 10);
 
+  const superadmin = await prisma.user.upsert({
+    where: { email: 'superadmin@gohite.com' },
+    update: {},
+    create: {
+      email: 'superadmin@gohite.com',
+      password: passwordHash,
+      name: 'Super Admin',
+      role: 'SUPER_ADMIN',
+    },
+  });
+
   const admin = await prisma.user.upsert({
     where: { email: 'admin@gohite.com' },
     update: {},
@@ -108,19 +119,33 @@ async function main() {
   ];
 
   for (const c of configs) {
-    await prisma.systemConfig.upsert({
-      where: { key_businessId: { key: c.key, businessId: c.businessId } },
-      update: { value: c.value },
-      create: c,
+    const existing = await prisma.systemConfig.findFirst({
+      where: { key: c.key, businessId: c.businessId },
     });
+    if (existing) {
+      await prisma.systemConfig.update({
+        where: { id: existing.id },
+        data: { value: c.value },
+      });
+    } else {
+      await prisma.systemConfig.create({
+        data: c,
+      });
+    }
   }
+
+  const userRoles = {
+    [admin.id]: 'ADMIN',
+    [manager.id]: 'MANAGER',
+    [employee.id]: 'EMPLOYEE',
+  };
 
   for (const user of [admin, manager, employee]) {
     for (const biz of [krishi, hardware]) {
       await prisma.userBusiness.upsert({
         where: { userId_businessId: { userId: user.id, businessId: biz.id } },
-        update: {},
-        create: { userId: user.id, businessId: biz.id },
+        update: { role: userRoles[user.id] },
+        create: { userId: user.id, businessId: biz.id, role: userRoles[user.id] },
       });
     }
   }

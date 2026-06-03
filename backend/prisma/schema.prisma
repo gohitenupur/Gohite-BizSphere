@@ -25,6 +25,7 @@ enum PaymentType {
 }
 
 enum UserRole {
+  SUPER_ADMIN
   ADMIN
   MANAGER
   EMPLOYEE
@@ -51,6 +52,7 @@ model UserBusiness {
   id         String   @id @default(uuid())
   userId     String
   businessId String
+  role       UserRole @default(EMPLOYEE)
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 

@@ -4,18 +4,25 @@ import { applyTheme } from '../theme/tokens.js';
 const BusinessContext = createContext(null);
 
 export function BusinessProvider({ children }) {
-  const [business, setBusinessState] = useState(null);
-
-  useEffect(() => {
+  const [business, setBusinessState] = useState(() => {
     const stored = sessionStorage.getItem('business');
     if (stored) {
-      const b = JSON.parse(stored);
-      setBusinessState(b);
-      applyTheme(b.type === 'KRISHI' ? 'krishi' : 'hardware');
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (business) {
+      applyTheme(business.type === 'KRISHI' ? 'krishi' : 'hardware');
     } else {
       applyTheme('neutral');
     }
-  }, []);
+  }, [business]);
 
   const setBusiness = (b) => {
     sessionStorage.setItem('businessId', b.id);

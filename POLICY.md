@@ -4,6 +4,7 @@
 |---------|------|---------|
 | 1.0.0 | 2026-06-03 | Initial policy: roles, tenant, stock, GST, audit, lifecycle |
 | 1.1.0 | 2026-06-03 | Fully configurable system via SystemConfig + Admin Settings UI |
+| 1.2.0 | 2026-06-03 | Align version; no policy changes (technical automation release) |
 
 ## 1. Roles & RBAC
 

@@ -6,39 +6,38 @@ import { useBusiness } from '../context/BusinessContext.jsx';
 import { apiRequest } from '../services/api.js';
 import { applyTheme } from '../theme/tokens.js';
 
-export default function Login() {
+export default function SuperAdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const { login } = useAuth();
-  const { business } = useBusiness();
+  const { clearBusiness } = useBusiness();
   const navigate = useNavigate();
 
+  // Force neutral theme for Super Admin console
   useEffect(() => {
-    if (!business) {
-      navigate('/select-business');
-    } else {
-      applyTheme(business.type === 'KRISHI' ? 'krishi' : 'hardware');
-    }
-  }, [business, navigate]);
+    applyTheme('neutral');
+    clearBusiness(); // Ensure no business context is active
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const data = await apiRequest('/api/auth/login', {
+      const data = await apiRequest('/api/super-admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, businessId: business?.id }),
+        body: JSON.stringify({ email, password }),
       });
+      
+      // Log in with Super Admin context
       login(data);
-      navigate('/dashboard');
+      navigate('/super-admin');
     } catch (err) {
-      setError(err.message || 'Login failed');
+      setError(err.message || 'Super Admin login failed');
     } finally {
       setLoading(false);
     }
@@ -59,10 +58,10 @@ export default function Login() {
         <div className="flex flex-col items-center mb-8">
           <Logo variant="login" className="mb-4" />
           <h1 className="font-headline text-2xl font-bold text-on-surface text-center tracking-tight mb-1">
-            Gohite Management
+            Super Admin Console
           </h1>
           <p className="font-body text-on-surface-variant text-sm text-center">
-            Sign in to your enterprise suite
+            Sign in to manage global enterprise resources
           </p>
         </div>
 
@@ -71,7 +70,7 @@ export default function Login() {
           {/* Email Input */}
           <div className="space-y-1.5 text-left">
             <label className="block font-label text-sm font-medium text-on-surface" htmlFor="email">
-              Email address
+              Admin Email
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -81,7 +80,7 @@ export default function Login() {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="admin@gohite.com"
+                placeholder="superadmin@gohite.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="block w-full pl-10 pr-3 py-2.5 bg-surface text-on-surface border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-colors outline-none"
@@ -92,14 +91,9 @@ export default function Login() {
 
           {/* Password Input */}
           <div className="space-y-1.5 text-left">
-            <div className="flex items-center justify-between">
-              <label className="block font-label text-sm font-medium text-on-surface" htmlFor="password">
-                Password
-              </label>
-              <a className="font-label text-sm font-medium text-primary hover:opacity-80 transition-colors" href="#">
-                Forgot Password?
-              </a>
-            </div>
+            <label className="block font-label text-sm font-medium text-on-surface" htmlFor="password">
+              Password
+            </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <span className="material-symbols-outlined text-outline-variant text-[20px]">lock</span>
@@ -126,21 +120,6 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Remember Me */}
-          <div className="flex items-center">
-            <input
-              id="remember-me"
-              name="remember-me"
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              className="h-4 w-4 text-primary focus:ring-primary border-outline-variant rounded bg-surface"
-            />
-            <label className="ml-2 block text-sm text-on-surface-variant font-body cursor-pointer select-none" htmlFor="remember-me">
-              Remember me for 30 days
-            </label>
-          </div>
-
           {error && <p className="text-sm text-error text-center">{error}</p>}
 
           {/* Submit Button */}
@@ -149,7 +128,7 @@ export default function Login() {
             disabled={loading}
             className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm font-label text-sm font-medium text-on-primary bg-primary hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all active:scale-[0.98] disabled:opacity-50"
           >
-            {loading ? 'Signing In...' : 'Sign In'}
+            {loading ? 'Authenticating...' : 'Sign In as Super Admin'}
           </button>
         </form>
 
@@ -176,4 +155,3 @@ export default function Login() {
     </div>
   );
 }
-

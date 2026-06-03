@@ -4,6 +4,7 @@
 |---------|------|---------|
 | 1.0.0 | 2026-06-03 | Initial: stack, schema, APIs, pagination, backup, env |
 | 1.1.0 | 2026-06-03 | Configuration API, Settings UI, config registry in shared package |
+| 1.2.0 | 2026-06-03 | Project automation: root Makefile, fix backend jest relative path |
 
 ## 1. Stack
 
@@ -106,13 +107,27 @@ psql $DATABASE_URL < backups/gohite_YYYYMMDD_HHMMSS.sql
 2. Redeploy previous application image/tag
 3. Run pending migrations only after review
 
-## 10. Local development
+Using the root Makefile (recommended):
+```bash
+# Perform initial setup (env config, npm install, start DB container, migrations, seeding)
+make setup
 
+# Start the services in dev mode
+make start
+
+# Run test suites
+make test
+
+# Stop docker container
+make stop
+```
+
+Using manual commands:
 ```bash
 cp .env.example .env
 npm install
-npm run db:migrate
-npm run db:seed
+npm run db:migrate -w backend
+npm run db:seed -w backend
 npm run dev
 ```
 

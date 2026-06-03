@@ -1,4 +1,4 @@
-const sharedSurfaces = {
+const neutralSurfaces = {
   surface: '#fdf7ff',
   surfaceContainer: '#f2ecf4',
   surfaceContainerLow: '#f8f2fa',
@@ -15,25 +15,53 @@ const sharedSurfaces = {
 
 export const themes = {
   neutral: {
-    ...sharedSurfaces,
+    ...neutralSurfaces,
     primary: '#4f378a',
     onPrimary: '#ffffff',
     primaryContainer: '#e9ddff',
     onPrimaryContainer: '#22005d',
+    secondaryContainer: '#e1d4fd',
+    tertiaryContainer: '#c9a74d',
   },
   krishi: {
-    ...sharedSurfaces,
-    primary: '#5c9e31',
+    surface: '#fbfdfb',
+    surfaceContainer: '#f1f5f1',
+    surfaceContainerLow: '#f8fbf8',
+    surfaceContainerLowest: '#ffffff',
+    surfaceContainerHigh: '#e8ece8',
+    surfaceVariant: '#dce1dc',
+    onSurface: '#1a1c1a',
+    onSurfaceVariant: '#424942',
+    outline: '#747974',
+    outlineVariant: '#c4cdc4',
+    error: '#ba1a1a',
+    errorContainer: '#ffdad6',
+    primary: '#4caf50',
     onPrimary: '#ffffff',
-    primaryContainer: '#d7f0c3',
-    onPrimaryContainer: '#1d3809',
+    primaryContainer: '#c8e6c9',
+    onPrimaryContainer: '#003300',
+    secondaryContainer: '#c8e6c9',
+    tertiaryContainer: '#dcedc8',
   },
   hardware: {
-    ...sharedSurfaces,
-    primary: '#29659a',
+    surface: '#fdfdff',
+    surfaceContainer: '#f2f6fc',
+    surfaceContainerLow: '#f8fafd',
+    surfaceContainerLowest: '#ffffff',
+    surfaceContainerHigh: '#e8f0fe',
+    surfaceVariant: '#e1e5eb',
+    onSurface: '#1a1b1e',
+    onSurfaceVariant: '#44474e',
+    outline: '#74777f',
+    outlineVariant: '#c2c7cf',
+    error: '#ba1a1a',
+    errorContainer: '#ffdad6',
+    primary: '#2196f3',
     onPrimary: '#ffffff',
-    primaryContainer: '#d4e8f7',
-    onPrimaryContainer: '#0d2d4a',
+    primaryContainer: '#bbdefb',
+    onPrimaryContainer: '#0d47a1',
+    secondaryContainer: '#e3f2fd',
+    tertiaryContainer: '#c9a74d',
   },
 };
 
@@ -55,6 +83,9 @@ export function applyTheme(themeName) {
   root.style.setProperty('--color-on-primary', t.onPrimary);
   root.style.setProperty('--color-primary-container', t.primaryContainer);
   root.style.setProperty('--color-on-primary-container', t.onPrimaryContainer);
+  root.style.setProperty('--color-secondary-container', t.secondaryContainer);
+  root.style.setProperty('--color-tertiary-container', t.tertiaryContainer);
   root.style.setProperty('--color-error', t.error);
   root.style.setProperty('--color-error-container', t.errorContainer);
 }
+

@@ -18,6 +18,8 @@ export default {
         'on-primary': 'var(--color-on-primary)',
         'primary-container': 'var(--color-primary-container)',
         'on-primary-container': 'var(--color-on-primary-container)',
+        'secondary-container': 'var(--color-secondary-container)',
+        'tertiary-container': 'var(--color-tertiary-container)',
         error: 'var(--color-error)',
         'error-container': 'var(--color-error-container)',
       },

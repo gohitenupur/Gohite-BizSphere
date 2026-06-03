@@ -11,6 +11,8 @@ import reportRoutes from './src/routes/reportRoutes.js';
 import stockRoutes from './src/routes/stockRoutes.js';
 import categoryRoutes from './src/routes/categoryRoutes.js';
 import configRoutes from './src/routes/configRoutes.js';
+import superAdminRoutes from './src/routes/superAdminRoutes.js';
+
 
 const app = express();
 
@@ -22,6 +24,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/super-admin', superAdminRoutes);
 
 const tenantRouter = express.Router();
 tenantRouter.use(authMiddleware);

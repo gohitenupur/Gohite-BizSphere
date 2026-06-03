@@ -10,6 +10,8 @@ import POSBilling from './pages/POSBilling.jsx';
 import Reports from './pages/Reports.jsx';
 import BulkUpload from './pages/BulkUpload.jsx';
 import Settings from './pages/Settings.jsx';
+import SuperAdmin from './pages/SuperAdmin.jsx';
+import SuperAdminLogin from './pages/SuperAdminLogin.jsx';
 
 function PrivateRoute({ children, requireBusiness = true }) {
   const { isAuthenticated } = useAuth();
@@ -26,15 +28,11 @@ export default function App() {
         <ConfigProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="/" element={<Navigate to="/select-business" replace />} />
             <Route path="/login" element={<Login />} />
-            <Route
-              path="/select-business"
-              element={
-                <PrivateRoute requireBusiness={false}>
-                  <BusinessSelect />
-                </PrivateRoute>
-              }
-            />
+            <Route path="/select-business" element={<BusinessSelect />} />
+            <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+            <Route path="/super-admin" element={<PrivateRoute requireBusiness={false}><SuperAdmin /></PrivateRoute>} />
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/inventory" element={<PrivateRoute><Inventory /></PrivateRoute>} />
             <Route path="/pos" element={<PrivateRoute><POSBilling /></PrivateRoute>} />

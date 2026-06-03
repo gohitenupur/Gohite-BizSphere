@@ -20,7 +20,17 @@ const envSchema = z.object({
     .default('true'),
 });
 
-const parsed = envSchema.safeParse(process.env);
+const cleanEnv = {};
+for (const key in process.env) {
+  const val = process.env[key];
+  if (typeof val === 'string') {
+    cleanEnv[key] = val.replace(/^['"]|['"]$/g, '');
+  } else {
+    cleanEnv[key] = val;
+  }
+}
+
+const parsed = envSchema.safeParse(cleanEnv);
 
 if (!parsed.success) {
   console.error('Invalid environment configuration:', parsed.error.flatten());
