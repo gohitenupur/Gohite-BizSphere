@@ -1,0 +1,178 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum BusinessType {
+  KRISHI
+  HARDWARE
+}
+
+enum MovementType {
+  IN
+  OUT
+}
+
+enum PaymentType {
+  CASH
+  UPI
+  CARD
+  CREDIT
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model User {
+  id        String       @id @default(uuid())
+  email     String       @unique
+  password  String
+  name      String
+  role      UserRole     @default(EMPLOYEE)
+  status    UserStatus   @default(ACTIVE)
+  createdAt DateTime     @default(now())
+  businesses UserBusiness[]
+  auditLogs  AuditLog[]
+}
+
+model UserBusiness {
+  id         String   @id @default(uuid())
+  userId     String
+  businessId String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, businessId])
+}
+
+model Business {
+  id         String       @id @default(uuid())
+  name       String
+  type       BusinessType
+  address    String?
+  gstNo      String?
+  mobile     String?
+  status     String       @default("ACTIVE")
+  categories Category[]
+  products   Product[]
+  sales      Sale[]
+  configs    SystemConfig[]
+  users      UserBusiness[]
+  auditLogs  AuditLog[]
+  stockMovements StockMovement[]
+}
+
+model SystemConfig {
+  id         String    @id @default(uuid())
+  key        String
+  value      String
+  businessId String?
+  business   Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([key, businessId])
+}
+
+model Category {
+  id         String    @id @default(uuid())
+  businessId String
+  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name       String
+  products   Product[]
+
+  @@unique([businessId, name])
+}
+
+model Product {
+  id             String          @id @default(uuid())
+  businessId     String
+  business       Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  categoryId     String
+  category       Category        @relation(fields: [categoryId], references: [id])
+  name           String
+  sku            String
+  purchasePrice  Float
+  sellingPrice   Float
+  quantity       Int             @default(0)
+  minStock       Int             @default(5)
+  unit           String
+  companyName    String
+  gstPercentage  Float           @default(18.0)
+  metadata       Json            @default("{}")
+  deletedAt      DateTime?
+  stockMovements StockMovement[]
+  saleItems      SaleItem[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([businessId, sku])
+  @@index([businessId])
+  @@index([businessId, quantity])
+}
+
+model StockMovement {
+  id         String       @id @default(uuid())
+  businessId String
+  business   Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type       MovementType
+  quantity   Int
+  reason     String
+  createdBy  String
+  createdAt  DateTime     @default(now())
+
+  @@index([businessId])
+}
+
+model Sale {
+  id           String      @id @default(uuid())
+  businessId   String
+  business     Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerName String      @default("Cash Customer")
+  mobileNo     String?
+  totalAmount  Float
+  gstAmount    Float
+  paymentType  PaymentType @default(CASH)
+  saleItems    SaleItem[]
+  createdAt    DateTime    @default(now())
+
+  @@index([businessId])
+}
+
+model SaleItem {
+  id        String  @id @default(uuid())
+  saleId    String
+  sale      Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+}
+
+model AuditLog {
+  id         String    @id @default(uuid())
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  businessId String?
+  business   Business? @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  action     String
+  entity     String?
+  entityId   String?
+  payload    Json?
+  createdAt  DateTime  @default(now())
+
+  @@index([businessId])
+  @@index([createdAt])
+}

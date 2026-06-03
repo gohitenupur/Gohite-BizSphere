@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Polymorphic Inventory - Gohite Hardware Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "surface": "#fdf7ff",
+                "surface-container-lowest": "#ffffff",
+                "surface-variant": "#e6e0e9",
+                "secondary": "#63597c",
+                "secondary-fixed-dim": "#cdc0e9",
+                "primary-fixed": "#e9ddff",
+                "on-tertiary-fixed": "#241a00",
+                "surface-container-high": "#ece6ee",
+                "primary-container": "#6750a4",
+                "inverse-primary": "#cfbcff",
+                "secondary-fixed": "#e9ddff",
+                "on-surface-variant": "#494551",
+                "tertiary-fixed-dim": "#e7c365",
+                "surface-container-highest": "#e6e0e9",
+                "surface-container-low": "#f8f2fa",
+                "on-error-container": "#93000a",
+                "outline": "#7a7582",
+                "primary-fixed-dim": "#cfbcff",
+                "on-tertiary-container": "#503d00",
+                "on-tertiary-fixed-variant": "#594400",
+                "surface-dim": "#ded8e0",
+                "tertiary-container": "#c9a74d",
+                "inverse-on-surface": "#f5eff7",
+                "background": "#fdf7ff",
+                "secondary-container": "#e1d4fd",
+                "on-primary-fixed-variant": "#4f378a",
+                "on-tertiary": "#ffffff",
+                "on-primary-fixed": "#22005d",
+                "tertiary": "#765b00",
+                "error": "#ba1a1a",
+                "surface-tint": "#6750a4",
+                "outline-variant": "#cbc4d2",
+                "on-background": "#1d1b20",
+                "primary": "#4f378a",
+                "on-error": "#ffffff",
+                "tertiary-fixed": "#ffdf93",
+                "on-secondary-container": "#645a7d",
+                "on-secondary-fixed": "#1f1635",
+                "surface-container": "#f2ecf4",
+                "error-container": "#ffdad6",
+                "on-secondary-fixed-variant": "#4b4263",
+                "on-secondary": "#ffffff",
+                "on-primary-container": "#e0d2ff",
+                "surface-bright": "#fdf7ff",
+                "inverse-surface": "#322f35",
+                "on-surface": "#1d1b20",
+                "on-primary": "#ffffff"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {},
+        "fontFamily": {
+                "headline": [
+                        "Inter"
+                ],
+                "display": [
+                        "Inter"
+                ],
+                "body": [
+                        "Inter"
+                ],
+                "label": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {}
+},
+    },
+  }
+</script>
+</head>
+<body class="bg-background text-on-background font-body min-h-screen flex">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-lowest dark:bg-surface-dim text-primary dark:text-primary-fixed-dim font-body text-label-md font-medium fixed left-0 top-0 h-full w-[240px] border-r border-outline-variant dark:border-outline shadow-sm flex flex-col h-full p-4 z-50">
+<div class="mb-8 px-4 flex items-center gap-3">
+<img alt="Gohite BizSphere Logo" class="w-10 h-10 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtbezctrjdjToYEwf85yNLDnsP7J53XfIh0MXC2qdip0VuM1-Fa2OlcM1jOKRJPq-vms85uPsZnsECYnlcoZfPdIOeh2UOw-UhB7dgUol8lU0eFeA3pFMpZd4mJH8_xU22ENpfNvcFY39eg0QZTdBnb24JZyODe6Vhp6EDFeSuTsCVwrjriQFMAEQQxDzGUkG40N-cJYZnPWUhvq62Tm3mvSP2VNMYbAbvKqunCSe3KW-BgDE1WC9UMyPV7bZv2XD68cGA1oI7PKBv"/>
+<div>
+<div class="text-xl font-black text-primary dark:text-primary-fixed">Gohite</div>
+<div class="text-xs text-on-surface-variant opacity-80">Enterprise Suite</div>
+</div>
+</div>
+<div class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-colors active:scale-[0.98] transition-transform rounded-lg" href="#">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary rounded-lg hover:bg-surface-container-high dark:hover:bg-surface-variant transition-colors active:scale-[0.98] transition-transform" href="#">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="inventory_2" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="">Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-colors active:scale-[0.98] transition-transform rounded-lg" href="#">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="point_of_sale">point_of_sale</span>
+<span class="">POS</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-on-surface-variant dark:text-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container transition-colors active:scale-[0.98] transition-transform rounded-lg" href="#">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="assessment">assessment</span>
+<span class="">Reports</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="ml-[240px] flex-1 flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<header class="bg-surface dark:bg-background text-primary dark:text-primary-fixed-dim font-headline text-headline-sm font-semibold docked full-width top-0 h-16 border-b border-outline-variant dark:border-outline flat no shadows flex justify-between items-center w-full px-6 sticky top-0 z-40 bg-surface/90 backdrop-blur-md">
+<div class="flex items-center gap-4">
+<img alt="Gohite Logo" class="w-8 h-8 object-contain sm:hidden" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtbezctrjdjToYEwf85yNLDnsP7J53XfIh0MXC2qdip0VuM1-Fa2OlcM1jOKRJPq-vms85uPsZnsECYnlcoZfPdIOeh2UOw-UhB7dgUol8lU0eFeA3pFMpZd4mJH8_xU22ENpfNvcFY39eg0QZTdBnb24JZyODe6Vhp6EDFeSuTsCVwrjriQFMAEQQxDzGUkG40N-cJYZnPWUhvq62Tm3mvSP2VNMYbAbvKqunCSe3KW-BgDE1WC9UMyPV7bZv2XD68cGA1oI7PKBv"/>
+<div class="text-lg font-bold text-on-surface dark:text-inverse-on-surface">Gohite Hardware Hub</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" data-icon="search">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary w-64 h-10" placeholder="Search inventory..." type="text"/>
+</div>
+<button class="hover:bg-surface-container-low dark:hover:bg-surface-container-high rounded-full p-2 cursor-pointer active:opacity-80 text-on-surface-variant dark:text-surface-variant transition-colors">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:bg-surface-container-low dark:hover:bg-surface-container-high rounded-full p-2 cursor-pointer active:opacity-80 text-on-surface-variant dark:text-surface-variant transition-colors">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="apps">apps</span>
+</button>
+<div class="h-8 w-px bg-outline-variant mx-2"></div>
+<button class="flex items-center gap-2 text-sm font-medium text-on-surface hover:text-primary transition-colors">
+<span class="">Business Switcher</span>
+<span class="material-symbols-outlined text-sm" data-icon="expand_more">expand_more</span>
+</button>
+<img alt="User Avatar" class="w-8 h-8 rounded-full border border-outline-variant" data-alt="A professional headshot of a person, serving as a user avatar in a modern corporate software interface. The portrait is warmly lit, conveying approachability and competence within a high-density, pragmatic UI setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTMzg7y6iPt9BjWMo6QcCLhOeq4SUp45eulxj82C0hDBrf6R8fOUU_oyxpKDRmrCsbj-1fFG11LVcx7lgvkRZbo7Avp79VRTGvhcN3vYTkFAWJhI_QDgqgrFtt378ZAJuJy-sMP61t032X_U6LsnPzc6s1rGyMfSt18YLR1vV1h_pwfj2RJYCpcf0OXIceeFVgxEzAVV4z17L2iao7zFYvnJFR_-M9fh0B0_welNxbPnWJHte6dbXxFQx7ZOq2qaofKgEQmS-lfHhi"/>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-6 flex-1 flex flex-col gap-6 max-w-7xl mx-auto w-full">
+<!-- Header Actions -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+<div>
+<h1 class="text-2xl font-bold text-on-background font-headline tracking-tight">Hardware Inventory</h1>
+<p class="text-sm text-on-surface-variant mt-1">Manage and track hardware items, specifications, and stock levels.</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container text-on-surface text-sm font-medium rounded-lg border border-outline-variant hover:bg-surface-container-high transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="upload_file">upload_file</span>
+                        Bulk Upload
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary text-sm font-medium rounded-lg hover:opacity-90 transition-opacity shadow-sm">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+                        Add Product
+                    </button>
+</div>
+</div>
+<!-- Filter Bar -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm">
+<div class="flex flex-wrap gap-4 items-center">
+<div class="flex items-center gap-2 text-sm font-medium text-on-surface-variant mr-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="filter_list">filter_list</span>
+                        Filters
+                    </div>
+<select class="h-10 text-sm bg-surface-container-low border border-outline-variant rounded-lg px-3 focus:ring-primary focus:border-primary">
+<option value="">All Categories</option>
+<option value="fasteners">Fasteners</option>
+<option value="tools">Power Tools</option>
+<option value="plumbing">Plumbing</option>
+<option value="electrical">Electrical</option>
+</select>
+<select class="h-10 text-sm bg-surface-container-low border border-outline-variant rounded-lg px-3 focus:ring-primary focus:border-primary">
+<option value="">All Brands</option>
+<option value="dewalt">DeWalt</option>
+<option value="makita">Makita</option>
+<option value="bosch">Bosch</option>
+<option value="milwaukee">Milwaukee</option>
+</select>
+<div class="flex items-center gap-2 ml-auto">
+<span class="text-xs text-on-surface-variant">Showing 1-15 of 248 items</span>
+</div>
+</div>
+</div>
+<!-- Data Table -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden flex-1 flex flex-col">
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm whitespace-nowrap">
+<thead class="bg-surface-container text-on-surface-variant font-medium border-b border-outline-variant">
+<tr>
+<th class="px-4 py-3 w-8"><input class="rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/></th>
+<th class="px-4 py-3">Product Name</th>
+<th class="px-4 py-3">SKU</th>
+<th class="px-4 py-3">Category</th>
+<th class="px-4 py-3 text-right">Price</th>
+<th class="px-4 py-3 text-right">Qty</th>
+<th class="px-4 py-3">Size/Spec</th>
+<th class="px-4 py-3">Material</th>
+<th class="px-4 py-3">Brand</th>
+<th class="px-4 py-3">Status</th>
+<th class="px-4 py-3 w-10"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/50 text-on-surface">
+<tr class="hover:bg-surface-container-low transition-colors h-[48px]">
+<td class="px-4"><input class="rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/></td>
+<td class="px-4 font-medium">Hex Bolt Grade 8</td>
+<td class="px-4 text-on-surface-variant font-mono text-xs">FST-HB-001</td>
+<td class="px-4">Fasteners</td>
+<td class="px-4 text-right">$0.45</td>
+<td class="px-4 text-right font-medium">1,250</td>
+<td class="px-4 text-on-surface-variant">1/2" x 2"</td>
+<td class="px-4 text-on-surface-variant">Zinc Plated Steel</td>
+<td class="px-4">Generic</td>
+<td class="px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary-container text-on-secondary-container">In Stock</span>
+</td>
+<td class="px-4">
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors bg-surface-container-lowest h-[48px]">
+<td class="px-4"><input class="rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/></td>
+<td class="px-4 font-medium">Cordless Drill 18V</td>
+<td class="px-4 text-on-surface-variant font-mono text-xs">PT-CD-018</td>
+<td class="px-4">Power Tools</td>
+<td class="px-4 text-right">$129.99</td>
+<td class="px-4 text-right font-medium">14</td>
+<td class="px-4 text-on-surface-variant">1/2" Chuck</td>
+<td class="px-4 text-on-surface-variant">Plastic/Metal</td>
+<td class="px-4">DeWalt</td>
+<td class="px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-container text-on-primary-container">Low Stock</span>
+</td>
+<td class="px-4">
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors h-[48px]">
+<td class="px-4"><input class="rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/></td>
+<td class="px-4 font-medium">PVC Pipe Schedule 40</td>
+<td class="px-4 text-on-surface-variant font-mono text-xs">PL-PVC-040</td>
+<td class="px-4">Plumbing</td>
+<td class="px-4 text-right">$8.50</td>
+<td class="px-4 text-right font-medium">85</td>
+<td class="px-4 text-on-surface-variant">2" x 10'</td>
+<td class="px-4 text-on-surface-variant">PVC</td>
+<td class="px-4">Charlotte Pipe</td>
+<td class="px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-secondary-container text-on-secondary-container">In Stock</span>
+</td>
+<td class="px-4">
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span></button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors bg-surface-container-lowest h-[48px]">
+<td class="px-4"><input class="rounded border-outline-variant text-primary focus:ring-primary" type="checkbox"/></td>
+<td class="px-4 font-medium">Romex Wire 12/2 WG</td>
+<td class="px-4 text-on-surface-variant font-mono text-xs">EL-RX-122</td>
+<td class="px-4">Electrical</td>
+<td class="px-4 text-right">$85.00</td>
+<td class="px-4 text-right font-medium">0</td>
+<td class="px-4 text-on-surface-variant">250' Roll</td>
+<td class="px-4 text-on-surface-variant">Copper/PVC</td>
+<td class="px-4">Southwire</td>
+<td class="px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-error-container text-on-error-container">Out of Stock</span>
+</td>
+<td class="px-4">
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="mt-auto px-4 py-3 border-t border-outline-variant bg-surface-container-lowest flex items-center justify-between">
+<div class="text-sm text-on-surface-variant">
+                        Rows per page: 
+                        <select class="ml-2 bg-transparent border-none text-sm font-medium focus:ring-0 cursor-pointer">
+<option>15</option>
+<option>30</option>
+<option>50</option>
+</select>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-1 rounded hover:bg-surface-container-low text-on-surface-variant disabled:opacity-50"><span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span></button>
+<span class="text-sm font-medium text-on-surface px-2">1 of 17</span>
+<button class="p-1 rounded hover:bg-surface-container-low text-on-surface-variant"><span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span></button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

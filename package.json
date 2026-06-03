@@ -1,0 +1,19 @@
+{
+  "name": "gohite-bizsphere",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "test": "npm run test -w backend && npm run test -w frontend",
+    "build": "npm run build -w frontend",
+    "db:migrate": "npm run db:migrate -w backend",
+    "db:seed": "npm run db:seed -w backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
