@@ -10,7 +10,7 @@ export const krishiMetadataSchema = z
     licenseNo: z.string().optional(),
   })
   .partial()
-  .strict();
+  .passthrough();
 
 export const hardwareMetadataSchema = z
   .object({
@@ -21,7 +21,7 @@ export const hardwareMetadataSchema = z
     warranty: z.string().optional(),
   })
   .partial()
-  .strict();
+  .passthrough();
 
 export function validateMetadata(businessType, metadata) {
   const data = metadata ?? {};

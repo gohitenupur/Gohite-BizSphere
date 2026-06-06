@@ -1,6 +1,5 @@
 # Gohite BizSphere
-
-Multi-business unified shop management for **Gohite Krishi Seva Kendra** and **Gohite Hardware Hub**.
+stock management for **Gohite Krishi Seva Kendra** and **Gohite Hardware Hub**.
 
 ## Documentation
 

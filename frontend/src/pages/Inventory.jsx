@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/common/AppShell.jsx';
 import StatusBadge from '../components/common/StatusBadge.jsx';
 import Toast from '../components/common/Toast.jsx';
@@ -6,29 +7,36 @@ import { useBusiness } from '../context/BusinessContext.jsx';
 import { useApi } from '../hooks/useApi.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useConfig } from '../context/ConfigContext.jsx';
+import CustomFieldsForm from '../components/common/CustomFieldsForm.jsx';
+import ImagePreviewModal from '../components/common/ImagePreviewModal.jsx';
 
 export default function Inventory() {
   const { business } = useBusiness();
   const { user } = useAuth();
   const { config } = useConfig();
+  const navigate = useNavigate();
   const units = config?.allowed_units || ['KG', 'Bags', 'Liters', 'Pieces'];
+  const customFields = config?.custom_metadata_fields || [];
   const { get, post, put, del } = useApi();
   const [products, setProducts] = useState([]);
   const [meta, setMeta] = useState({ page: 1, totalPages: 1 });
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [categories, setCategories] = useState([]);
-  const [modal, setModal] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedBrand, setSelectedBrand] = useState('');
   const [toast, setToast] = useState('');
+  const [previewSrc, setPreviewSrc] = useState('');
+  const [previewTitle, setPreviewTitle] = useState('');
 
-  const canEdit = ['ADMIN', 'MANAGER'].includes(user?.role);
+  const canEdit = ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user?.role);
 
   const load = useCallback(async () => {
     try {
       const q = new URLSearchParams({ page, pageSize: 25, search });
       const res = await get(`/api/products?${q}`);
-      setProducts(res.data);
-      setMeta(res.meta);
+      setProducts(res.data || []);
+      setMeta(res.meta || { page: 1, totalPages: 1 });
     } catch (e) {
       setToast(e.message);
     }
@@ -36,30 +44,16 @@ export default function Inventory() {
 
   useEffect(() => {
     load();
-    get('/api/categories').then((r) => setCategories(r.data));
+    get('/api/categories').then((r) => setCategories(r.data || []));
   }, [load, get]);
 
-  const saveProduct = async (form) => {
-    try {
-      if (modal?.id) {
-        await put(`/api/products/${modal.id}`, form);
-      } else {
-        await post('/api/products', form);
-      }
-      setModal(null);
-      load();
-      setToast('Product saved');
-    } catch (e) {
-      setToast(e.message);
-    }
-  };
 
   const removeProduct = async (id) => {
-    if (!confirm('Soft delete this product?')) return;
+    if (!confirm('Are you sure you want to delete this product?')) return;
     try {
       await del(`/api/products/${id}`);
       load();
-      setToast('Product removed');
+      setToast('Product removed successfully');
     } catch (e) {
       setToast(e.message);
     }
@@ -67,154 +61,290 @@ export default function Inventory() {
 
   const isKrishi = business?.type === 'KRISHI';
 
-  return (
-    <AppShell>
-      <Toast message={toast} type={toast.includes('saved') || toast.includes('removed') ? 'success' : 'error'} onClose={() => setToast('')} />
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <input
-          placeholder="Search name, SKU..."
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          className="flex-1 h-10 px-3 rounded-lg border border-outline-variant"
-        />
-        {canEdit && (
-          <button
-            type="button"
-            onClick={() => setModal({})}
-            className="h-10 px-4 bg-primary text-on-primary rounded-lg text-sm font-medium"
-          >
-            Add Product
-          </button>
-        )}
-      </div>
-      <div className="overflow-x-auto rounded-xl border border-outline-variant bg-surface-container-lowest">
-        <table className="w-full dense-table text-sm">
-          <thead>
-            <tr className="border-b border-outline-variant text-left text-xs uppercase text-on-surface-variant">
-              <th className="p-2">Name</th>
-              <th className="p-2">SKU</th>
-              <th className="p-2">Qty</th>
-              {isKrishi ? (
-                <>
-                  <th className="p-2">Batch</th>
-                  <th className="p-2">Expiry</th>
-                </>
-              ) : (
-                <>
-                  <th className="p-2">Size</th>
-                  <th className="p-2">Material</th>
-                </>
-              )}
-              <th className="p-2">Status</th>
-              {canEdit && <th className="p-2">Actions</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((p) => (
-              <tr key={p.id} className="border-b border-outline-variant/50 h-8">
-                <td className="p-2">{p.name}</td>
-                <td className="p-2">{p.sku}</td>
-                <td className="p-2">{p.quantity}</td>
-                {isKrishi ? (
-                  <>
-                    <td className="p-2">{p.metadata?.batchNo || '—'}</td>
-                    <td className="p-2">{p.metadata?.expiryDate || '—'}</td>
-                  </>
-                ) : (
-                  <>
-                    <td className="p-2">{p.metadata?.size || '—'}</td>
-                    <td className="p-2">{p.metadata?.material || '—'}</td>
-                  </>
-                )}
-                <td className="p-2">
-                  <StatusBadge
-                    status={p.quantity <= p.minStock ? 'lowStock' : 'inStock'}
-                    label={p.quantity <= p.minStock ? 'Low Stock' : 'In Stock'}
-                  />
-                </td>
-                {canEdit && (
-                  <td className="p-2 space-x-2">
-                    <button type="button" className="text-primary text-xs" onClick={() => setModal(p)}>Edit</button>
-                    <button type="button" className="text-error text-xs" onClick={() => removeProduct(p.id)}>Delete</button>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="flex justify-between mt-4 text-sm">
-        <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="disabled:opacity-40">Previous</button>
-        <span>Page {meta.page} of {meta.totalPages}</span>
-        <button type="button" disabled={page >= meta.totalPages} onClick={() => setPage((p) => p + 1)} className="disabled:opacity-40">Next</button>
-      </div>
-      {modal && (
-        <ProductModal
-          product={modal}
-          categories={categories}
-          isKrishi={isKrishi}
-          units={units}
-          defaultGst={config?.default_gst_percentage ?? 18}
-          defaultMinStock={config?.default_min_stock ?? 5}
-          onClose={() => setModal(null)}
-          onSave={saveProduct}
-        />
-      )}
-    </AppShell>
-  );
-}
-
-function ProductModal({ product, categories, isKrishi, units, defaultGst, defaultMinStock, onClose, onSave }) {
-  const [form, setForm] = useState({
-    name: product.name || '',
-    sku: product.sku || '',
-    categoryId: product.categoryId || categories[0]?.id || '',
-    purchasePrice: product.purchasePrice || 0,
-    sellingPrice: product.sellingPrice || 0,
-    quantity: product.quantity || 0,
-    minStock: product.minStock ?? defaultMinStock,
-    unit: product.unit || units[0] || 'Pieces',
-    companyName: product.companyName || '',
-    gstPercentage: product.gstPercentage ?? defaultGst,
-    metadata: product.metadata || {},
+  // Client side filters for category and brand
+  const filteredProducts = products.filter((p) => {
+    if (selectedCategory && p.categoryId !== selectedCategory) return false;
+    if (selectedBrand && p.companyName !== selectedBrand) return false;
+    return true;
   });
 
-  const setMeta = (key, val) => setForm((f) => ({ ...f, metadata: { ...f.metadata, [key]: val } }));
+  // Extract unique brands (companyNames)
+  const brands = [...new Set(products.map((p) => p.companyName).filter(Boolean))];
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-40 p-4">
-      <div className="bg-surface-container-lowest rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
-        <h2 className="font-semibold mb-4">{product.id ? 'Edit' : 'Add'} Product</h2>
-        <div className="grid gap-3 text-sm">
-          <input placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="h-9 px-2 border rounded" />
-          <input placeholder="SKU" value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} className="h-9 px-2 border rounded" />
-          <select value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })} className="h-9 px-2 border rounded">
-            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-          <select value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className="h-9 px-2 border rounded">
-            {units.map((u) => <option key={u} value={u}>{u}</option>)}
-          </select>
-          <div className="grid grid-cols-2 gap-2">
-            <input type="number" placeholder="Purchase" value={form.purchasePrice} onChange={(e) => setForm({ ...form, purchasePrice: +e.target.value })} className="h-9 px-2 border rounded" />
-            <input type="number" placeholder="Selling" value={form.sellingPrice} onChange={(e) => setForm({ ...form, sellingPrice: +e.target.value })} className="h-9 px-2 border rounded" />
+    <AppShell>
+      <Toast
+        message={toast}
+        type={toast.includes('successfully') ? 'success' : 'error'}
+        onClose={() => setToast('')}
+      />
+
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header Actions */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-left">
+          <div>
+            <h1 className="text-2xl font-bold text-on-background font-headline tracking-tight">
+              {isKrishi ? 'Agricultural Inventory' : 'Hardware Inventory'}
+            </h1>
+            <p className="text-xs text-on-surface-variant mt-1">
+              Manage and track products, specifications, and stock levels.
+            </p>
           </div>
-          {isKrishi ? (
-            <>
-              <input placeholder="Batch No" value={form.metadata.batchNo || ''} onChange={(e) => setMeta('batchNo', e.target.value)} className="h-9 px-2 border rounded" />
-              <input type="date" value={form.metadata.expiryDate || ''} onChange={(e) => setMeta('expiryDate', e.target.value)} className="h-9 px-2 border rounded" />
-            </>
-          ) : (
-            <>
-              <input placeholder="Size" value={form.metadata.size || ''} onChange={(e) => setMeta('size', e.target.value)} className="h-9 px-2 border rounded" />
-              <input placeholder="Material" value={form.metadata.material || ''} onChange={(e) => setMeta('material', e.target.value)} className="h-9 px-2 border rounded" />
-            </>
-          )}
+          <div className="flex gap-3">
+            <button
+              onClick={() => navigate('/bulk-upload')}
+              className="flex items-center gap-2 px-4 py-2 bg-surface-container text-on-surface text-xs font-semibold rounded-lg border border-outline-variant hover:bg-surface-container-high transition-colors shadow-sm cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">upload_file</span>
+              Bulk Upload
+            </button>
+            {canEdit && (
+              <button
+                onClick={() => navigate('/bulk-upload', { state: { tab: 'single', focusImage: true } })}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">add</span>
+                Add Product
+              </button>
+            )}
+          </div>
         </div>
-        <div className="flex gap-2 mt-4">
-          <button type="button" onClick={onClose} className="flex-1 h-9 border rounded">Cancel</button>
-          <button type="button" onClick={() => onSave(form)} className="flex-1 h-9 bg-primary text-on-primary rounded">Save</button>
+
+        {/* Filter Bar */}
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm text-left">
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex items-center gap-2 text-xs font-semibold text-on-surface-variant">
+              <span className="material-symbols-outlined text-[18px]">filter_list</span>
+              Filters
+            </div>
+
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="h-10 text-xs bg-surface-container-low border border-outline-variant rounded-lg px-3 focus:ring-primary focus:border-primary outline-none"
+            >
+              <option value="">All Categories</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedBrand}
+              onChange={(e) => setSelectedBrand(e.target.value)}
+              className="h-10 text-xs bg-surface-container-low border border-outline-variant rounded-lg px-3 focus:ring-primary focus:border-primary outline-none"
+            >
+              <option value="">All Brands</option>
+              {brands.map((b) => (
+                <option key={b} value={b}>
+                  {b}
+                </option>
+              ))}
+            </select>
+
+            {/* Quick search input inside filter bar */}
+            <div className="relative flex-1 max-w-xs ml-auto">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">
+                search
+              </span>
+              <input
+                placeholder="Search SKU or name..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                className="pl-9 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-primary w-full h-10"
+                type="text"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Data Table */}
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden flex flex-col">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm dense-table border-collapse">
+              <thead className="bg-surface-container-low text-on-surface-variant font-medium border-b border-outline-variant">
+                <tr>
+                  <th className="px-4 py-3 w-8">
+                    <input
+                      className="rounded border-outline-variant text-primary focus:ring-primary h-4 w-4 bg-surface cursor-pointer"
+                      type="checkbox"
+                      readOnly
+                    />
+                  </th>
+                  <th className="px-4 py-3">Product Name</th>
+                  <th className="px-4 py-3">SKU</th>
+                  <th className="px-4 py-3">Qty</th>
+                  {isKrishi ? (
+                    <>
+                      <th className="px-4 py-3">Batch</th>
+                      <th className="px-4 py-3">Expiry</th>
+                    </>
+                  ) : (
+                    <>
+                      <th className="px-4 py-3">Size</th>
+                      <th className="px-4 py-3">Material</th>
+                    </>
+                  )}
+                  {customFields.map((cf) => (
+                    <th key={cf.key} className="px-4 py-3">{cf.label}</th>
+                  ))}
+                  <th className="px-4 py-3">Status</th>
+                  {canEdit && <th className="px-4 py-3 text-center">Actions</th>}
+                </tr>
+              </thead>
+              <tbody className="text-on-surface font-medium divide-y divide-outline-variant/30">
+                {filteredProducts.length === 0 ? (
+                  <tr>
+                    <td colSpan={7 + customFields.length} className="p-4 text-center text-xs text-on-surface-variant">
+                      No products found matching filters.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredProducts.map((p) => (
+                    <tr key={p.id} className="hover:bg-surface-container-low/30 transition-colors">
+                      <td className="px-4 py-2">
+                        <input
+                          className="rounded border-outline-variant text-primary focus:ring-primary h-4 w-4 bg-surface cursor-pointer"
+                          type="checkbox"
+                          readOnly
+                        />
+                      </td>
+                      <td className="px-4 py-2 text-xs font-bold text-on-surface flex items-center gap-2.5">
+                        {p.metadata?.imageUrl ? (
+                          <img
+                            src={p.metadata.imageUrl}
+                            alt={p.name}
+                            className="w-8 h-8 rounded-md object-cover border border-outline-variant/30 shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => {
+                              setPreviewSrc(p.metadata.imageUrl);
+                              setPreviewTitle(p.name);
+                            }}
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-md bg-surface-container-high flex items-center justify-center border border-outline-variant/30 shrink-0 text-on-surface-variant/40">
+                            <span className="material-symbols-outlined text-[16px]">image</span>
+                          </div>
+                        )}
+                        <span>{p.name}</span>
+                      </td>
+                      <td className="px-4 py-2 text-xs text-on-surface-variant">{p.sku}</td>
+                      <td className="px-4 py-2 text-xs">
+                        {p.quantity} {p.unit}
+                      </td>
+                      {isKrishi ? (
+                        <>
+                          <td className="px-4 py-2 text-xs">{p.metadata?.batchNo || '—'}</td>
+                          <td className="px-4 py-2 text-xs">{p.metadata?.expiryDate || '—'}</td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="px-4 py-2 text-xs">{p.metadata?.size || '—'}</td>
+                          <td className="px-4 py-2 text-xs">{p.metadata?.material || '—'}</td>
+                        </>
+                      )}
+                      {customFields.map((cf) => {
+                        const val = p.metadata?.[cf.key];
+                        let element = '—';
+                        
+                        if (val !== undefined && val !== null && String(val).trim() !== '') {
+                          if (cf.type === 'toggle') {
+                            element = val ? 'Yes' : 'No';
+                          } else if (cf.type === 'multiselect') {
+                            element = Array.isArray(val) ? val.join(', ') : String(val);
+                          } else if (cf.type === 'file' && typeof val === 'string' && val.startsWith('data:')) {
+                            const isPdf = val.startsWith('data:application/pdf');
+                            element = (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setPreviewSrc(val);
+                                  setPreviewTitle(`${p.name} - ${cf.label}`);
+                                }}
+                                className="inline-flex items-center gap-1 text-primary hover:underline font-semibold cursor-pointer bg-transparent border-none p-0"
+                                title="Click to view attachment"
+                              >
+                                <span className="material-symbols-outlined text-[16px]">
+                                  {isPdf ? 'picture_as_pdf' : 'attachment'}
+                                </span>
+                                <span className="text-[10px]">View</span>
+                              </button>
+                            );
+                          } else {
+                            element = String(val);
+                          }
+                        }
+
+                        return (
+                          <td key={cf.key} className="px-4 py-2 text-xs">{element}</td>
+                        );
+                      })}
+                      <td className="px-4 py-2">
+                        <StatusBadge
+                          status={p.quantity <= p.minStock ? 'lowStock' : 'inStock'}
+                          label={p.quantity <= p.minStock ? 'Low Stock' : 'In Stock'}
+                        />
+                      </td>
+                      {canEdit && (
+                        <td className="px-4 py-2 text-center space-x-3">
+                          <button
+                            type="button"
+                            className="text-primary text-xs font-semibold hover:underline cursor-pointer animate-none"
+                            onClick={() => navigate('/bulk-upload', { state: { tab: 'single', product: p } })}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="text-error text-xs font-semibold hover:underline cursor-pointer"
+                            onClick={() => removeProduct(p.id)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination Footer */}
+          <div className="flex items-center justify-between px-4 py-3 bg-surface-container-low border-t border-outline-variant text-xs font-medium">
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+              className="px-3 py-1.5 border border-outline-variant bg-surface rounded hover:bg-surface-container transition-colors disabled:opacity-40 cursor-pointer"
+            >
+              Previous
+            </button>
+            <span className="text-on-surface-variant">
+              Page {meta.page} of {meta.totalPages}
+            </span>
+            <button
+              type="button"
+              disabled={page >= meta.totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              className="px-3 py-1.5 border border-outline-variant bg-surface rounded hover:bg-surface-container transition-colors disabled:opacity-40 cursor-pointer"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      <ImagePreviewModal
+        isOpen={!!previewSrc}
+        onClose={() => setPreviewSrc('')}
+        src={previewSrc}
+        title={previewTitle}
+      />
+    </AppShell>
   );
 }

@@ -75,11 +75,20 @@ export async function setConfig(key, value, businessId = null, userId) {
     return { error: 'This setting is global only', status: 400 };
   }
 
-  const row = await prisma.systemConfig.upsert({
-    where: { key_businessId: { key, businessId: businessId ?? null } },
-    create: { key, value: validation.serialized, businessId: businessId ?? null },
-    update: { value: validation.serialized },
+  const bid = businessId ?? null;
+  let row = await prisma.systemConfig.findFirst({
+    where: { key, businessId: bid }
   });
+  if (row) {
+    row = await prisma.systemConfig.update({
+      where: { id: row.id },
+      data: { value: validation.serialized }
+    });
+  } else {
+    row = await prisma.systemConfig.create({
+      data: { key, value: validation.serialized, businessId: bid }
+    });
+  }
 
   const { writeAuditLog } = await import('./auditService.js');
   await writeAuditLog({

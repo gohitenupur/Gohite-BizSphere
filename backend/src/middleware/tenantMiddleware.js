@@ -13,7 +13,7 @@ export async function tenantMiddleware(req, res, next) {
     return res.status(404).json({ error: 'Business not found' });
   }
 
-  if (req.user.role !== 'ADMIN') {
+  if (req.user.role !== 'SUPER_ADMIN') {
     const access = await prisma.userBusiness.findUnique({
       where: {
         userId_businessId: { userId: req.user.id, businessId },
@@ -22,6 +22,8 @@ export async function tenantMiddleware(req, res, next) {
     if (!access) {
       return res.status(403).json({ error: 'No access to this business' });
     }
+    // Override user's role with their business-scoped role for this request lifecycle
+    req.user.role = access.role;
   }
 
   req.business = business;

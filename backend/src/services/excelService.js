@@ -5,8 +5,11 @@ import { writeAuditLog } from './auditService.js';
 
 const BATCH_SIZE = 100;
 
+import { getConfigParsed } from './configService.js';
+
 export async function bulkUploadProducts(business, userId, buffer) {
-  const rows = parseProductSpreadsheet(buffer);
+  const customFields = await getConfigParsed('custom_metadata_fields', business.id) || [];
+  const rows = parseProductSpreadsheet(buffer, business.type, customFields);
   const errors = [];
   let successCount = 0;
 
