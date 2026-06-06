@@ -73,7 +73,7 @@ export async function superAdminLogin(email, password) {
 }
 
 export async function listBusinessesForUser(userId, role) {
-  if (!userId || role === 'ADMIN' || role === 'SUPER_ADMIN') {
+  if (!userId || role === 'SUPER_ADMIN') {
     return prisma.business.findMany({ where: { status: 'ACTIVE' }, orderBy: { name: 'asc' } });
   }
   const links = await prisma.userBusiness.findMany({

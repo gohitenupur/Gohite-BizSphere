@@ -81,6 +81,20 @@ export const CONFIG_KEYS = {
     label: 'Invoice footer',
     description: 'Printed at bottom of PDF invoices',
   },
+  custom_metadata_fields: {
+    type: 'json',
+    default: '[{"key": "rackNo", "label": "Rack Location", "type": "text"}, {"key": "fragile", "label": "Fragile Item", "type": "toggle"}, {"key": "condition", "label": "Condition", "type": "select", "options": ["New", "Refurbished", "Used"]}]',
+    scope: 'business',
+    label: 'Custom Inventory Fields',
+    description: 'JSON list of custom columns to display and collect (e.g. [{"key":"rackNo","label":"Rack Number","type":"text"}])',
+  },
+  custom_sale_fields: {
+    type: 'json',
+    default: '[]',
+    scope: 'business',
+    label: 'Custom Sales/Customer Fields',
+    description: 'JSON list of custom fields to collect during POS checkout (e.g. [{"key":"deliveryAddress","label":"Delivery Address","type":"text"}])',
+  },
 };
 
 export const CONFIG_KEY_LIST = Object.keys(CONFIG_KEYS);

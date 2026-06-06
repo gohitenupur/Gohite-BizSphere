@@ -148,6 +148,7 @@ model Sale {
   gstAmount    Float
   paymentType  PaymentType @default(CASH)
   saleItems    SaleItem[]
+  metadata     Json        @default("{}")
   createdAt    DateTime    @default(now())
 
   @@index([businessId])

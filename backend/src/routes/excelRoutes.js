@@ -7,5 +7,6 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
 const router = Router();
 
 router.post('/upload', requireRoles('ADMIN', 'MANAGER'), upload.single('file'), excelController.upload);
+router.get('/template', requireRoles('ADMIN', 'MANAGER'), excelController.downloadTemplate);
 
 export default router;

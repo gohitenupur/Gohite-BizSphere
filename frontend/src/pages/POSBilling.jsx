@@ -4,24 +4,39 @@ import Toast from '../components/common/Toast.jsx';
 import { useApi } from '../hooks/useApi.js';
 import { useConfig } from '../context/ConfigContext.jsx';
 import { downloadPdf } from '../services/api.js';
+import CustomFieldsForm from '../components/common/CustomFieldsForm.jsx';
 
 export default function POSBilling() {
   const { get, post } = useApi();
   const { config } = useConfig();
   const paymentTypes = config?.allowed_payment_types || ['CASH', 'UPI', 'CARD', 'CREDIT'];
+  const customSaleFields = config?.custom_sale_fields || [];
   const posEnabled = config?.enable_pos !== false;
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageMeta, setPageMeta] = useState({ page: 1, totalPages: 1 });
   const [cart, setCart] = useState([]);
   const [customerName, setCustomerName] = useState('Cash Customer');
   const [paymentType, setPaymentType] = useState('CASH');
+  const [metadata, setMetadata] = useState({});
   const [toast, setToast] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const setMeta = (key, val) => {
+    setMetadata((m) => ({
+      ...m,
+      [key]: val,
+    }));
+  };
+
   useEffect(() => {
-    const q = new URLSearchParams({ pageSize: 50, search });
-    get(`/api/products?${q}`).then((r) => setProducts(r.data || []));
-  }, [get, search]);
+    const q = new URLSearchParams({ page, pageSize: 20, search });
+    get(`/api/products?${q}`).then((r) => {
+      setProducts(r.data || []);
+      setPageMeta(r.meta || { page: 1, totalPages: 1 });
+    });
+  }, [get, page, search]);
 
   const addToCart = (p) => {
     setCart((c) => {
@@ -58,12 +73,21 @@ export default function POSBilling() {
     setLoading(true);
     setToast('');
     try {
+      const filteredMeta = {};
+      Object.entries(metadata).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && String(v).trim() !== '') {
+          filteredMeta[k] = typeof v === 'boolean' ? v : String(v).trim();
+        }
+      });
+
       const result = await post('/api/sales', {
         customerName,
         paymentType,
         items: cart.map((i) => ({ productId: i.productId, quantity: i.quantity, price: i.price })),
+        metadata: filteredMeta,
       });
       setCart([]);
+      setMetadata({});
       setToast(`Sale complete: ${result.sale.id.slice(0, 8)}`);
       await downloadPdf(`/api/sales/${result.sale.id}/pdf`, `invoice-${result.sale.id.slice(0, 8)}.pdf`);
     } catch (e) {
@@ -112,7 +136,10 @@ export default function POSBilling() {
               <input
                 placeholder="Search products by name or SKU..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
                 className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary h-11 shadow-sm"
               />
             </div>
@@ -165,6 +192,31 @@ export default function POSBilling() {
                 })
               )}
             </div>
+
+            {/* Pagination Controls */}
+            {pageMeta.totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 bg-surface-container-low border border-outline-variant rounded-xl text-xs font-semibold shadow-sm">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                  className="px-3 py-1.5 border border-outline-variant bg-surface rounded hover:bg-surface-container transition-colors disabled:opacity-40 cursor-pointer"
+                >
+                  Previous
+                </button>
+                <span className="text-on-surface-variant">
+                  Page {pageMeta.page} of {pageMeta.totalPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={page >= pageMeta.totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="px-3 py-1.5 border border-outline-variant bg-surface rounded hover:bg-surface-container transition-colors disabled:opacity-40 cursor-pointer"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Cart Sidebar Panel */}
@@ -200,6 +252,13 @@ export default function POSBilling() {
                   ))}
                 </select>
               </div>
+
+              {customSaleFields.length > 0 && (
+                <div className="pt-3 border-t border-outline-variant/20 space-y-2">
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-wider">Additional Details</p>
+                  <CustomFieldsForm fields={customSaleFields} values={metadata} onChange={setMeta} />
+                </div>
+              )}
             </div>
 
             {/* Cart Items List */}

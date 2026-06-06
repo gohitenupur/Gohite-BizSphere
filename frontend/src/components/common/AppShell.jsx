@@ -7,11 +7,11 @@ import { useBusiness } from '../../context/BusinessContext.jsx';
 const nav = [
   { to: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
   { to: '/inventory', label: 'Inventory', icon: 'inventory_2' },
+  { to: '/bulk-upload', label: 'Bulk Upload', icon: 'upload_file' },
   { to: '/pos', label: 'POS', icon: 'point_of_sale' },
   { to: '/reports', label: 'Reports', icon: 'assessment' },
-  { to: '/bulk-upload', label: 'Bulk Upload', icon: 'upload_file' },
+  { to: '/manage-fields', label: 'Manage Fields', icon: 'tune', adminOnly: true },
   { to: '/settings', label: 'Settings', icon: 'settings', adminOnly: true },
-  { to: '/super-admin', label: 'Super Admin', icon: 'admin_panel_settings', superAdminOnly: true },
 ];
 
 export default function AppShell({ children }) {
@@ -30,8 +30,8 @@ export default function AppShell({ children }) {
     <div className="h-screen w-screen flex bg-surface text-on-surface font-body antialiased overflow-hidden">
       {/* Sidebar for large screens */}
       <aside className="hidden lg:flex w-60 flex-col border-r border-outline-variant bg-surface-container-lowest p-4 shrink-0">
-        <div 
-          onClick={() => navigate('/select-business')} 
+        <div
+          onClick={() => navigate('/select-business')}
           className="mb-8 px-2 flex items-center gap-3 cursor-pointer group"
         >
           <Logo variant="login" className="object-contain shrink-0 h-10 w-10 group-hover:scale-105 transition-transform" />
@@ -52,13 +52,12 @@ export default function AppShell({ children }) {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive
+                className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isActive
                     ? 'bg-primary-container text-on-primary-container'
                     : 'text-on-surface-variant hover:bg-surface-container-high'
-                }`}
+                  }`}
               >
-                <span 
+                <span
                   className="material-symbols-outlined text-xl"
                   style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}
                 >
@@ -104,23 +103,25 @@ export default function AppShell({ children }) {
               </button>
             </div>
 
-            <div className="hidden md:block h-8 w-px bg-outline-variant mx-1"></div>
+            <div className="hidden md:block h-5 w-px bg-outline-variant/60 mx-1"></div>
 
-            <span className="text-xs text-on-surface-variant font-medium hidden sm:inline">{user?.name}</span>
-
-            <button
-              type="button"
-              onClick={() => {
-                logout();
-                navigate('/login');
-              }}
-              className="text-xs text-on-surface-variant hover:text-error transition-colors hidden sm:inline-block"
-            >
-              Logout
-            </button>
-
-            <div className="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center overflow-hidden shrink-0">
-              <span className="material-symbols-outlined text-on-surface-variant text-[20px]">person</span>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex flex-col text-right select-none">
+                <span className="text-xs font-bold text-on-surface leading-none">{user?.name}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    logout();
+                    navigate('/login');
+                  }}
+                  className="text-[10px] text-on-surface-variant hover:text-error transition-colors font-semibold mt-1 bg-transparent border-none p-0 cursor-pointer text-right w-fit ml-auto"
+                >
+                  Logout
+                </button>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center overflow-hidden shrink-0">
+                <span className="material-symbols-outlined text-on-surface-variant text-[20px]">person</span>
+              </div>
             </div>
           </div>
         </header>
@@ -150,11 +151,10 @@ export default function AppShell({ children }) {
                     <Link
                       key={item.to}
                       to={item.to}
-                      className={`flex-1 flex flex-col items-center py-2.5 text-xs transition-colors ${
-                        isActive ? 'text-primary font-semibold' : 'text-on-surface-variant'
-                      }`}
+                      className={`flex-1 flex flex-col items-center py-2.5 text-xs transition-colors ${isActive ? 'text-primary font-semibold' : 'text-on-surface-variant'
+                        }`}
                     >
-                      <span 
+                      <span
                         className="material-symbols-outlined"
                         style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}
                       >
@@ -180,7 +180,7 @@ export default function AppShell({ children }) {
               {showMobileMore && (
                 <div className="fixed inset-0 z-50 flex items-end justify-center lg:hidden">
                   {/* Backdrop */}
-                  <div 
+                  <div
                     className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity animate-fade-in"
                     onClick={() => setShowMobileMore(false)}
                   />
@@ -188,10 +188,10 @@ export default function AppShell({ children }) {
                   <div className="relative w-full bg-surface-container-lowest border-t border-outline-variant rounded-t-2xl p-6 z-10 animate-slide-up shadow-lg">
                     {/* Drag indicator line */}
                     <div className="mx-auto w-12 h-1.5 bg-outline-variant/60 rounded-full mb-6" />
-                    
+
                     <div className="flex justify-between items-center mb-6">
                       <h3 className="text-base font-bold font-headline">More Options</h3>
-                      <button 
+                      <button
                         onClick={() => setShowMobileMore(false)}
                         className="p-1 rounded-full hover:bg-surface-container-low"
                       >
@@ -207,13 +207,12 @@ export default function AppShell({ children }) {
                             key={item.to}
                             to={item.to}
                             onClick={() => setShowMobileMore(false)}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                              isActive
+                            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${isActive
                                 ? 'bg-primary-container text-on-primary-container font-semibold'
                                 : 'text-on-surface-variant hover:bg-surface-container-high'
-                            }`}
+                              }`}
                           >
-                            <span 
+                            <span
                               className="material-symbols-outlined text-xl"
                               style={isActive ? { fontVariationSettings: "'FILL' 1" } : {}}
                             >

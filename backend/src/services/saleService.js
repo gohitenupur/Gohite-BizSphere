@@ -3,7 +3,7 @@ import { parsePagination, paginatedResponse } from '../utils/pagination.js';
 import { writeAuditLog } from './auditService.js';
 
 export async function createSale(business, userId, body) {
-  const { customerName, mobileNo, paymentType, items } = body;
+  const { customerName, mobileNo, paymentType, items, metadata } = body;
   if (!items?.length) return { error: 'Sale items required', status: 400 };
 
   try {
@@ -54,6 +54,7 @@ export async function createSale(business, userId, body) {
           totalAmount,
           gstAmount,
           paymentType: paymentType || 'CASH',
+          metadata: metadata || {},
           saleItems: { create: lineItems },
         },
         include: { saleItems: { include: { product: true } } },

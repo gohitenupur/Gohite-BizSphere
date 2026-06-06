@@ -15,7 +15,7 @@ export default function Settings() {
   const [toast, setToast] = useState('');
   const [loading, setLoading] = useState(true);
 
-  if (user?.role !== 'ADMIN') {
+  if (!['ADMIN', 'SUPER_ADMIN'].includes(user?.role)) {
     return <Navigate to="/dashboard" replace />;
   }
 

@@ -7,6 +7,8 @@ import { useBusiness } from '../context/BusinessContext.jsx';
 import { useApi } from '../hooks/useApi.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useConfig } from '../context/ConfigContext.jsx';
+import CustomFieldsForm from '../components/common/CustomFieldsForm.jsx';
+import ImagePreviewModal from '../components/common/ImagePreviewModal.jsx';
 
 export default function Inventory() {
   const { business } = useBusiness();
@@ -14,6 +16,7 @@ export default function Inventory() {
   const { config } = useConfig();
   const navigate = useNavigate();
   const units = config?.allowed_units || ['KG', 'Bags', 'Liters', 'Pieces'];
+  const customFields = config?.custom_metadata_fields || [];
   const { get, post, put, del } = useApi();
   const [products, setProducts] = useState([]);
   const [meta, setMeta] = useState({ page: 1, totalPages: 1 });
@@ -22,10 +25,11 @@ export default function Inventory() {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
-  const [modal, setModal] = useState(null);
   const [toast, setToast] = useState('');
+  const [previewSrc, setPreviewSrc] = useState('');
+  const [previewTitle, setPreviewTitle] = useState('');
 
-  const canEdit = ['ADMIN', 'MANAGER'].includes(user?.role);
+  const canEdit = ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user?.role);
 
   const load = useCallback(async () => {
     try {
@@ -43,20 +47,6 @@ export default function Inventory() {
     get('/api/categories').then((r) => setCategories(r.data || []));
   }, [load, get]);
 
-  const saveProduct = async (form) => {
-    try {
-      if (modal?.id) {
-        await put(`/api/products/${modal.id}`, form);
-      } else {
-        await post('/api/products', form);
-      }
-      setModal(null);
-      load();
-      setToast('Product saved successfully');
-    } catch (e) {
-      setToast(e.message);
-    }
-  };
 
   const removeProduct = async (id) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
@@ -110,7 +100,7 @@ export default function Inventory() {
             </button>
             {canEdit && (
               <button
-                onClick={() => setModal({})}
+                onClick={() => navigate('/bulk-upload', { state: { tab: 'single', focusImage: true } })}
                 className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">add</span>
@@ -200,6 +190,9 @@ export default function Inventory() {
                       <th className="px-4 py-3">Material</th>
                     </>
                   )}
+                  {customFields.map((cf) => (
+                    <th key={cf.key} className="px-4 py-3">{cf.label}</th>
+                  ))}
                   <th className="px-4 py-3">Status</th>
                   {canEdit && <th className="px-4 py-3 text-center">Actions</th>}
                 </tr>
@@ -207,13 +200,13 @@ export default function Inventory() {
               <tbody className="text-on-surface font-medium divide-y divide-outline-variant/30">
                 {filteredProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-4 text-center text-xs text-on-surface-variant">
+                    <td colSpan={7 + customFields.length} className="p-4 text-center text-xs text-on-surface-variant">
                       No products found matching filters.
                     </td>
                   </tr>
                 ) : (
                   filteredProducts.map((p) => (
-                    <tr key={p.id} className="hover:bg-surface-container-low/30 transition-colors h-8">
+                    <tr key={p.id} className="hover:bg-surface-container-low/30 transition-colors">
                       <td className="px-4 py-2">
                         <input
                           className="rounded border-outline-variant text-primary focus:ring-primary h-4 w-4 bg-surface cursor-pointer"
@@ -221,7 +214,24 @@ export default function Inventory() {
                           readOnly
                         />
                       </td>
-                      <td className="px-4 py-2 text-xs font-bold text-on-surface">{p.name}</td>
+                      <td className="px-4 py-2 text-xs font-bold text-on-surface flex items-center gap-2.5">
+                        {p.metadata?.imageUrl ? (
+                          <img
+                            src={p.metadata.imageUrl}
+                            alt={p.name}
+                            className="w-8 h-8 rounded-md object-cover border border-outline-variant/30 shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => {
+                              setPreviewSrc(p.metadata.imageUrl);
+                              setPreviewTitle(p.name);
+                            }}
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-md bg-surface-container-high flex items-center justify-center border border-outline-variant/30 shrink-0 text-on-surface-variant/40">
+                            <span className="material-symbols-outlined text-[16px]">image</span>
+                          </div>
+                        )}
+                        <span>{p.name}</span>
+                      </td>
                       <td className="px-4 py-2 text-xs text-on-surface-variant">{p.sku}</td>
                       <td className="px-4 py-2 text-xs">
                         {p.quantity} {p.unit}
@@ -237,6 +247,42 @@ export default function Inventory() {
                           <td className="px-4 py-2 text-xs">{p.metadata?.material || '—'}</td>
                         </>
                       )}
+                      {customFields.map((cf) => {
+                        const val = p.metadata?.[cf.key];
+                        let element = '—';
+                        
+                        if (val !== undefined && val !== null && String(val).trim() !== '') {
+                          if (cf.type === 'toggle') {
+                            element = val ? 'Yes' : 'No';
+                          } else if (cf.type === 'multiselect') {
+                            element = Array.isArray(val) ? val.join(', ') : String(val);
+                          } else if (cf.type === 'file' && typeof val === 'string' && val.startsWith('data:')) {
+                            const isPdf = val.startsWith('data:application/pdf');
+                            element = (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setPreviewSrc(val);
+                                  setPreviewTitle(`${p.name} - ${cf.label}`);
+                                }}
+                                className="inline-flex items-center gap-1 text-primary hover:underline font-semibold cursor-pointer bg-transparent border-none p-0"
+                                title="Click to view attachment"
+                              >
+                                <span className="material-symbols-outlined text-[16px]">
+                                  {isPdf ? 'picture_as_pdf' : 'attachment'}
+                                </span>
+                                <span className="text-[10px]">View</span>
+                              </button>
+                            );
+                          } else {
+                            element = String(val);
+                          }
+                        }
+
+                        return (
+                          <td key={cf.key} className="px-4 py-2 text-xs">{element}</td>
+                        );
+                      })}
                       <td className="px-4 py-2">
                         <StatusBadge
                           status={p.quantity <= p.minStock ? 'lowStock' : 'inStock'}
@@ -248,7 +294,7 @@ export default function Inventory() {
                           <button
                             type="button"
                             className="text-primary text-xs font-semibold hover:underline cursor-pointer animate-none"
-                            onClick={() => setModal(p)}
+                            onClick={() => navigate('/bulk-upload', { state: { tab: 'single', product: p } })}
                           >
                             Edit
                           </button>
@@ -293,226 +339,12 @@ export default function Inventory() {
         </div>
       </div>
 
-      {modal && (
-        <ProductModal
-          product={modal}
-          categories={categories}
-          isKrishi={isKrishi}
-          units={units}
-          defaultGst={config?.default_gst_percentage ?? 18}
-          defaultMinStock={config?.default_min_stock ?? 5}
-          onClose={() => setModal(null)}
-          onSave={saveProduct}
-        />
-      )}
+      <ImagePreviewModal
+        isOpen={!!previewSrc}
+        onClose={() => setPreviewSrc('')}
+        src={previewSrc}
+        title={previewTitle}
+      />
     </AppShell>
-  );
-}
-
-function ProductModal({ product, categories, isKrishi, units, defaultGst, defaultMinStock, onClose, onSave }) {
-  const [form, setForm] = useState({
-    name: product.name || '',
-    sku: product.sku || '',
-    categoryId: product.categoryId || categories[0]?.id || '',
-    purchasePrice: product.purchasePrice || 0,
-    sellingPrice: product.sellingPrice || 0,
-    quantity: product.quantity || 0,
-    minStock: product.minStock ?? defaultMinStock,
-    unit: product.unit || units[0] || 'Pieces',
-    companyName: product.companyName || '',
-    gstPercentage: product.gstPercentage ?? defaultGst,
-    metadata: product.metadata || {},
-  });
-
-  const setMeta = (key, val) => setForm((f) => ({ ...f, metadata: { ...f.metadata, [key]: val } }));
-
-  return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-surface-container-lowest rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 border border-outline-variant/30 shadow-xl text-left">
-        <h2 className="font-headline font-bold text-lg text-on-surface mb-4">
-          {product.id ? 'Edit' : 'Add'} Product
-        </h2>
-        <div className="grid gap-3 text-xs">
-          <div className="space-y-1">
-            <label className="block text-[11px] font-semibold text-on-surface-variant">Product Name</label>
-            <input
-              placeholder="e.g. Urea Fertilizer"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="h-10 w-full px-3 border rounded-lg bg-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="block text-[11px] font-semibold text-on-surface-variant">SKU Code</label>
-              <input
-                placeholder="SKU-CODE"
-                value={form.sku}
-                onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                className="h-10 w-full px-3 border rounded-lg bg-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="block text-[11px] font-semibold text-on-surface-variant">Company Name</label>
-              <input
-                placeholder="Brand / Manufacturer"
-                value={form.companyName}
-                onChange={(e) => setForm({ ...form, companyName: e.target.value })}
-                className="h-10 w-full px-3 border rounded-lg bg-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="block text-[11px] font-semibold text-on-surface-variant">Category</label>
-              <select
-                value={form.categoryId}
-                onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
-                className="h-10 w-full px-2 border rounded-lg bg-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-              >
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="block text-[11px] font-semibold text-on-surface-variant">Unit</label>
-              <select
-                value={form.unit}
-                onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                className="h-10 w-full px-2 border rounded-lg bg-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-              >
-                {units.map((u) => (
-                  <option key={u} value={u}>
-                    {u}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="block text-[11px] font-semibold text-on-surface-variant">Purchase Price (₹)</label>
-              <input
-                type="number"
-                placeholder="0"
-                value={form.purchasePrice}
-                onChange={(e) => setForm({ ...form, purchasePrice: +e.target.value })}
-                className="h-10 w-full px-3 border rounded-lg bg-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="block text-[11px] font-semibold text-on-surface-variant">Selling Price (₹)</label>
-              <input
-                type="number"
-                placeholder="0"
-                value={form.sellingPrice}
-                onChange={(e) => setForm({ ...form, sellingPrice: +e.target.value })}
-                className="h-10 w-full px-3 border rounded-lg bg-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            <div className="space-y-1">
-              <label className="block text-[11px] font-semibold text-on-surface-variant">Quantity</label>
-              <input
-                type="number"
-                placeholder="0"
-                value={form.quantity}
-                onChange={(e) => setForm({ ...form, quantity: +e.target.value })}
-                className="h-10 w-full px-3 border rounded-lg bg-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="block text-[11px] font-semibold text-on-surface-variant">Min Stock</label>
-              <input
-                type="number"
-                placeholder="5"
-                value={form.minStock}
-                onChange={(e) => setForm({ ...form, minStock: +e.target.value })}
-                className="h-10 w-full px-3 border rounded-lg bg-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="block text-[11px] font-semibold text-on-surface-variant">GST %</label>
-              <input
-                type="number"
-                placeholder="18"
-                value={form.gstPercentage}
-                onChange={(e) => setForm({ ...form, gstPercentage: +e.target.value })}
-                className="h-10 w-full px-3 border rounded-lg bg-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-              />
-            </div>
-          </div>
-
-          {isKrishi ? (
-            <div className="grid grid-cols-2 gap-2 border-t border-outline-variant/30 pt-3">
-              <div className="space-y-1">
-                <label className="block text-[11px] font-semibold text-on-surface-variant">Batch No</label>
-                <input
-                  placeholder="e.g. BT-9912"
-                  value={form.metadata.batchNo || ''}
-                  onChange={(e) => setMeta('batchNo', e.target.value)}
-                  className="h-10 w-full px-3 border rounded-lg bg-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="block text-[11px] font-semibold text-on-surface-variant">Expiry Date</label>
-                <input
-                  type="date"
-                  value={form.metadata.expiryDate || ''}
-                  onChange={(e) => setMeta('expiryDate', e.target.value)}
-                  className="h-10 w-full px-3 border rounded-lg bg-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-2 border-t border-outline-variant/30 pt-3">
-              <div className="space-y-1">
-                <label className="block text-[11px] font-semibold text-on-surface-variant">Size</label>
-                <input
-                  placeholder="e.g. 1/2 inch, M10"
-                  value={form.metadata.size || ''}
-                  onChange={(e) => setMeta('size', e.target.value)}
-                  className="h-10 w-full px-3 border rounded-lg bg-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="block text-[11px] font-semibold text-on-surface-variant">Material</label>
-                <input
-                  placeholder="e.g. Brass, Carbon Steel"
-                  value={form.metadata.material || ''}
-                  onChange={(e) => setMeta('material', e.target.value)}
-                  className="h-10 w-full px-3 border rounded-lg bg-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="flex gap-3 mt-6">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 h-10 border border-outline-variant rounded-lg text-xs font-semibold hover:bg-surface-container transition-colors cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={() => onSave(form)}
-            className="flex-1 h-10 bg-primary text-on-primary rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer animate-none"
-          >
-            Save Product
-          </button>
-        </div>
-      </div>
-    </div>
   );
 }

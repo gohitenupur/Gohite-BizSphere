@@ -36,7 +36,7 @@ const businessDetails = {
 export default function BusinessSelect() {
   const { get } = useApi();
   const { setBusiness } = useBusiness();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [businesses, setBusinesses] = useState([]);
   const [error, setError] = useState('');
@@ -52,9 +52,8 @@ export default function BusinessSelect() {
   }, [get]);
 
   const select = (b) => {
-    logout();
     setBusiness(b);
-    navigate('/login');
+    navigate('/dashboard');
   };
 
   return (
@@ -91,21 +90,16 @@ export default function BusinessSelect() {
             <p className="text-lg text-on-surface-variant leading-relaxed">
               Choose an operating entity to access its dedicated management dashboard and inventory controls.
             </p>
-            {user?.role === 'SUPER_ADMIN' && (
-              <button
-                onClick={() => navigate('/super-admin')}
-                className="mt-6 flex items-center gap-2 px-5 py-2.5 bg-primary text-on-primary text-sm font-semibold rounded-lg shadow-sm hover:opacity-90 active:scale-[0.98] transition-all"
-              >
-                <span className="material-symbols-outlined text-[20px]">admin_panel_settings</span>
-                Go to Super Admin Panel
-              </button>
-            )}
           </div>
 
           {error && <p className="text-error mb-4 text-center">{error}</p>}
 
           {/* Bento Grid / Dual Card Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+          <div className={
+            businesses.length === 1
+              ? "flex justify-center w-full"
+              : "grid grid-cols-1 md:grid-cols-2 gap-8 w-full"
+          }>
             {businesses.map((b) => {
               const isKrishi = b.type === 'KRISHI';
               const details = isKrishi ? businessDetails.KRISHI : businessDetails.HARDWARE;
@@ -113,7 +107,9 @@ export default function BusinessSelect() {
                 <div
                   key={b.id}
                   onClick={() => select(b)}
-                  className="group relative bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full cursor-pointer"
+                  className={`group relative bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col h-full cursor-pointer ${
+                    businesses.length === 1 ? 'w-full max-w-md' : ''
+                  }`}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = details.accentColor;
                   }}
@@ -194,21 +190,23 @@ export default function BusinessSelect() {
           </div>
 
           <div className="mt-12 text-center flex flex-col gap-2 items-center">
-            <a
+            {/* <a
               className="text-sm text-primary font-medium hover:underline flex items-center gap-1 justify-center"
               href="#"
               onClick={(e) => e.preventDefault()}
             >
               <span className="material-symbols-outlined text-[18px]">add</span>
               Register New Business Unit
-            </a>
-            <button
-              onClick={() => navigate('/super-admin/login')}
-              className="text-xs text-on-surface-variant/70 hover:text-primary font-semibold flex items-center gap-1 justify-center transition-colors"
-            >
-              <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
-              Super Admin Console
-            </button>
+            </a> */}
+            {user?.role === 'SUPER_ADMIN' && (
+              <button
+                onClick={() => navigate('/super-admin')}
+                className="text-xs text-on-surface-variant/70 hover:text-primary font-semibold flex items-center gap-1 justify-center transition-colors"
+              >
+                <span className="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+                Super Admin Console
+              </button>
+            )}
           </div>
         </div>
       </main>

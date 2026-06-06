@@ -18,6 +18,26 @@ export function generateInvoicePdf(sale, business, options = {}) {
     doc.fontSize(12).text(`Invoice #${sale.id.slice(0, 8).toUpperCase()}`);
     doc.text(`Date: ${new Date(sale.createdAt).toLocaleString()}`);
     doc.text(`Customer: ${sale.customerName}`);
+    if (sale.mobileNo) doc.text(`Mobile: ${sale.mobileNo}`);
+
+    if (options.customFields?.length && sale.metadata) {
+      options.customFields.forEach((cf) => {
+        const val = sale.metadata[cf.key];
+        if (val !== undefined && val !== null && String(val).trim() !== '') {
+          let displayVal = '';
+          if (cf.type === 'toggle') {
+            displayVal = val ? 'Yes' : 'No';
+          } else if (cf.type === 'multiselect') {
+            displayVal = Array.isArray(val) ? val.join(', ') : String(val);
+          } else if (cf.type === 'file' && typeof val === 'string' && val.startsWith('data:')) {
+            displayVal = val.startsWith('data:image/') ? '[Image Attached]' : '[Document Attached]';
+          } else {
+            displayVal = String(val);
+          }
+          doc.text(`${cf.label}: ${displayVal}`);
+        }
+      });
+    }
     doc.moveDown();
 
     doc.fontSize(10);

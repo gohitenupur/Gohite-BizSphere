@@ -51,3 +51,23 @@ body {
   animation: fade-in 0.2s ease-out forwards;
 }
 
+@keyframes highlight-glow {
+  0% {
+    border-color: var(--color-outline-variant);
+    box-shadow: none;
+  }
+  20%, 80% {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 14px var(--color-primary);
+  }
+  100% {
+    border-color: var(--color-outline-variant);
+    box-shadow: none;
+  }
+}
+
+.animate-highlight-glow {
+  animation: highlight-glow 2.5s ease-in-out;
+}
+
+

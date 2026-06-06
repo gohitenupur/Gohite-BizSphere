@@ -14,7 +14,7 @@ export default function Reports() {
   const [meta, setMeta] = useState({ totalPages: 1 });
   const [toast, setToast] = useState('');
 
-  if (!['ADMIN', 'MANAGER'].includes(user?.role)) {
+  if (!['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user?.role)) {
     return <Navigate to="/dashboard" replace />;
   }
 

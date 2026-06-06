@@ -18,12 +18,12 @@ export default function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!business) {
-      navigate('/select-business');
-    } else {
+    if (business) {
       applyTheme(business.type === 'KRISHI' ? 'krishi' : 'hardware');
+    } else {
+      applyTheme('neutral');
     }
-  }, [business, navigate]);
+  }, [business]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,10 +33,10 @@ export default function Login() {
       const data = await apiRequest('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, businessId: business?.id }),
+        body: JSON.stringify({ email, password }),
       });
       login(data);
-      navigate('/dashboard');
+      navigate('/select-business');
     } catch (err) {
       setError(err.message || 'Login failed');
     } finally {
@@ -153,16 +153,7 @@ export default function Login() {
           </button>
         </form>
 
-        {/* Back Link */}
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => navigate('/select-business')}
-            className="text-xs text-primary font-semibold flex items-center justify-center gap-1 mx-auto hover:opacity-85 transition-opacity"
-          >
-            <span className="material-symbols-outlined text-[14px]">arrow_back</span>
-            Back to Business Selection
-          </button>
-        </div>
+
 
         {/* Footer */}
         <div className="mt-8 text-center border-t border-outline-variant/30 pt-6">
