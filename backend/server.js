@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { config } from './src/config/index.js';
 import { authMiddleware } from './src/middleware/authMiddleware.js';
 import { tenantMiddleware } from './src/middleware/tenantMiddleware.js';
@@ -13,6 +15,9 @@ import categoryRoutes from './src/routes/categoryRoutes.js';
 import configRoutes from './src/routes/configRoutes.js';
 import superAdminRoutes from './src/routes/superAdminRoutes.js';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const frontendDistDir = path.resolve(__dirname, '../frontend/dist');
+const frontendIndexFile = path.join(frontendDistDir, 'index.html');
 
 const app = express();
 
@@ -38,6 +43,14 @@ tenantRouter.use('/reports', reportRoutes);
 tenantRouter.use('/config', configRoutes);
 
 app.use('/api', tenantRouter);
+
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(frontendDistDir));
+
+  app.get(/^(?!\/api).*/, (_req, res) => {
+    res.sendFile(frontendIndexFile);
+  });
+}
 
 app.use((err, _req, res, _next) => {
   console.error(err);
