@@ -34,7 +34,18 @@ export async function salesSummary(business, { from, to }) {
 
 export async function listSalesForReport(business, query) {
   const { page, pageSize, sort, order, skip } = await parsePagination(query, business.id);
-  const where = { businessId: business.id };
+  const { from, to } = query;
+  const where = {
+    businessId: business.id,
+    ...(from || to
+      ? {
+          createdAt: {
+            ...(from && { gte: new Date(from) }),
+            ...(to && { lte: new Date(to) }),
+          },
+        }
+      : {}),
+  };
 
   const [total, data] = await Promise.all([
     prisma.sale.count({ where }),
@@ -48,3 +59,24 @@ export async function listSalesForReport(business, query) {
 
   return paginatedResponse(data, total, { page, pageSize });
 }
+
+export async function getAllSalesForReport(business, query = {}) {
+  const { from, to } = query;
+  const where = {
+    businessId: business.id,
+    ...(from || to
+      ? {
+          createdAt: {
+            ...(from && { gte: new Date(from) }),
+            ...(to && { lte: new Date(to) }),
+          },
+        }
+      : {}),
+  };
+
+  return prisma.sale.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+  });
+}
+

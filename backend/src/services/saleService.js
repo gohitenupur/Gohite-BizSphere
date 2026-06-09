@@ -103,7 +103,13 @@ export async function getSaleById(business, id) {
   const sale = await prisma.sale.findFirst({
     where: { id, businessId: business.id },
     include: {
-      saleItems: { include: { product: true } },
+      saleItems: {
+        include: {
+          product: {
+            include: { category: true }
+          }
+        }
+      },
       business: true,
     },
   });
