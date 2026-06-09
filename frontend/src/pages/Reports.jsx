@@ -4,6 +4,7 @@ import Toast from '../components/common/Toast.jsx';
 import { useApi } from '../hooks/useApi.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Navigate } from 'react-router-dom';
+import { downloadPdf } from '../services/api.js';
 
 export default function Reports() {
   const { user } = useAuth();
@@ -14,24 +15,98 @@ export default function Reports() {
   const [meta, setMeta] = useState({ totalPages: 1 });
   const [toast, setToast] = useState('');
 
+  const [filterType, setFilterType] = useState('all');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
+
   if (!['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(user?.role)) {
     return <Navigate to="/dashboard" replace />;
   }
 
+  const getQueryParams = () => {
+    const params = {};
+    const now = new Date();
+    if (filterType === 'week') {
+      const d = new Date();
+      d.setDate(now.getDate() - 6);
+      d.setHours(0, 0, 0, 0);
+      params.from = d.toISOString();
+    } else if (filterType === 'month') {
+      const d = new Date();
+      d.setDate(now.getDate() - 29);
+      d.setHours(0, 0, 0, 0);
+      params.from = d.toISOString();
+    } else if (filterType === 'custom') {
+      if (customFrom) {
+        const d = new Date(customFrom);
+        d.setHours(0, 0, 0, 0);
+        params.from = d.toISOString();
+      }
+      if (customTo) {
+        const d = new Date(customTo);
+        d.setHours(23, 59, 59, 999);
+        params.to = d.toISOString();
+      }
+    }
+    return params;
+  };
+
+  const getRegisterLabel = () => {
+    switch (filterType) {
+      case 'week':
+        return 'Weekly Register';
+      case 'month':
+        return 'Monthly Register';
+      case 'custom':
+        return 'Custom Range Register';
+      default:
+        return 'All-time Register';
+    }
+  };
+
+  // Reset page to 1 when filters change
   useEffect(() => {
-    get('/api/reports/sales-summary')
-      .then(setSummary)
-      .catch((e) => setToast(e.message));
-  }, [get]);
+    setPage(1);
+  }, [filterType, customFrom, customTo]);
 
   useEffect(() => {
-    get(`/api/reports/sales?page=${page}&pageSize=25`)
+    const params = getQueryParams();
+    const queryStr = new URLSearchParams(params).toString();
+    get(`/api/reports/sales-summary?${queryStr}`)
+      .then(setSummary)
+      .catch((e) => setToast(e.message));
+  }, [get, filterType, customFrom, customTo]);
+
+  useEffect(() => {
+    const params = getQueryParams();
+    params.page = page;
+    params.pageSize = 25;
+    const queryStr = new URLSearchParams(params).toString();
+    get(`/api/reports/sales?${queryStr}`)
       .then((r) => {
         setSales(r.data || []);
         setMeta(r.meta || { totalPages: 1 });
       })
       .catch((e) => setToast(e.message));
-  }, [get, page]);
+  }, [get, page, filterType, customFrom, customTo]);
+
+  const handleExportExcel = () => {
+    setToast('Excel export initiated...');
+    const params = getQueryParams();
+    const queryStr = new URLSearchParams(params).toString();
+    downloadPdf(`/api/reports/sales-excel?${queryStr}`, 'sales-report.xlsx')
+      .then(() => setToast('Excel report downloaded successfully!'))
+      .catch((e) => setToast('Error exporting Excel: ' + e.message));
+  };
+
+  const handleExportPdf = () => {
+    setToast('PDF report generation started...');
+    const params = getQueryParams();
+    const queryStr = new URLSearchParams(params).toString();
+    downloadPdf(`/api/reports/sales-pdf?${queryStr}`, 'sales-report.pdf')
+      .then(() => setToast('PDF report downloaded successfully!'))
+      .catch((e) => setToast('Error exporting PDF: ' + e.message));
+  };
 
   return (
     <AppShell>
@@ -46,14 +121,14 @@ export default function Reports() {
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => setToast('Excel export initiated...')}
+              onClick={handleExportExcel}
               className="flex items-center gap-2 px-3 py-1.5 border border-outline-variant bg-surface rounded-lg text-xs font-semibold hover:bg-surface-container transition-colors cursor-pointer"
             >
               <span className="material-symbols-outlined text-[16px]">file_download</span>
               Export Excel
             </button>
             <button
-              onClick={() => setToast('PDF report generation started...')}
+              onClick={handleExportPdf}
               className="flex items-center gap-2 px-3 py-1.5 bg-primary text-on-primary rounded-lg text-xs font-semibold hover:opacity-95 transition-opacity cursor-pointer shadow-sm"
             >
               <span className="material-symbols-outlined text-[16px]">picture_as_pdf</span>
@@ -61,6 +136,7 @@ export default function Reports() {
             </button>
           </div>
         </div>
+
 
         {/* Bento Summary Cards */}
         {summary && (
@@ -100,11 +176,40 @@ export default function Reports() {
 
         {/* Transactions Table Container */}
         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden flex flex-col">
-          <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+          <div className="p-4 border-b border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-surface-container-lowest">
             <h2 className="text-sm font-bold font-headline">Sales Register Journal</h2>
-            <div className="flex items-center gap-2 text-xs text-on-surface-variant">
-              <span className="material-symbols-outlined text-[16px]">calendar_month</span>
-              All-time Register
+            <div className="flex flex-wrap items-center gap-3 text-xs">
+              <div className="flex items-center gap-2 border border-outline-variant bg-surface rounded-lg px-2.5 py-1.5">
+                <span className="material-symbols-outlined text-[16px] text-on-surface-variant">calendar_month</span>
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="bg-transparent border-none text-xs font-semibold text-on-surface-variant focus:outline-none cursor-pointer pr-1"
+                >
+                  <option value="all">All-time Register</option>
+                  <option value="week">Weekly Register</option>
+                  <option value="month">Monthly Register</option>
+                  <option value="custom">Custom Range</option>
+                </select>
+              </div>
+
+              {filterType === 'custom' && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    value={customFrom}
+                    onChange={(e) => setCustomFrom(e.target.value)}
+                    className="px-2 py-1.5 border border-outline-variant bg-surface rounded-lg text-xs font-semibold text-on-surface-variant focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                  />
+                  <span className="text-on-surface-variant font-bold">to</span>
+                  <input
+                    type="date"
+                    value={customTo}
+                    onChange={(e) => setCustomTo(e.target.value)}
+                    className="px-2 py-1.5 border border-outline-variant bg-surface rounded-lg text-xs font-semibold text-on-surface-variant focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                  />
+                </div>
+              )}
             </div>
           </div>
 

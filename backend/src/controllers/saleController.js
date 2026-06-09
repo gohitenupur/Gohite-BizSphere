@@ -1,6 +1,12 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
 import * as saleService from '../services/saleService.js';
 import { generateInvoicePdf } from '../utils/pdfGenerator.js';
 import { getConfigParsed } from '../services/configService.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Resolve the project root logo (3 levels up: controllers/ -> src/ -> backend/ -> root)
+const DEFAULT_LOGO_PATH = path.resolve(__dirname, '../../../logo.png');
 
 export async function create(req, res) {
   const posEnabled = await getConfigParsed('enable_pos', req.business.id);
@@ -27,6 +33,7 @@ export async function pdf(req, res) {
     footerText: footer,
     displayName: displayName || result.sale.business.name,
     customFields,
+    logoPath: DEFAULT_LOGO_PATH,
   });
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename=invoice-${req.params.id.slice(0, 8)}.pdf`);
