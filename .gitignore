@@ -10,4 +10,4 @@ coverage/
 backend/prisma/*.db
 uploads/
 theme/
-Makefile
+# Makefile
