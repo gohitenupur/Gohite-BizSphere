@@ -178,6 +178,7 @@ export default function Inventory() {
                   </th>
                   <th className="px-4 py-3">Product Name</th>
                   <th className="px-4 py-3">SKU</th>
+                  <th className="px-4 py-3">Brand / Company</th>
                   <th className="px-4 py-3">Qty</th>
                   {isKrishi ? (
                     <>
@@ -200,7 +201,7 @@ export default function Inventory() {
               <tbody className="text-on-surface font-medium divide-y divide-outline-variant/30">
                 {filteredProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={7 + customFields.length} className="p-4 text-center text-xs text-on-surface-variant">
+                    <td colSpan={8 + customFields.length} className="p-4 text-center text-xs text-on-surface-variant">
                       No products found matching filters.
                     </td>
                   </tr>
@@ -233,6 +234,7 @@ export default function Inventory() {
                         <span>{p.name}</span>
                       </td>
                       <td className="px-4 py-2 text-xs text-on-surface-variant">{p.sku}</td>
+                      <td className="px-4 py-2 text-xs text-on-surface-variant">{p.companyName || '—'}</td>
                       <td className="px-4 py-2 text-xs">
                         {p.quantity} {p.unit}
                       </td>
